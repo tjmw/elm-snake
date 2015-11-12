@@ -30,7 +30,7 @@ type alias Game =
 defaultGame : Game
 defaultGame =
   {
-    snake = Snake halfWidth halfHeight Up 200
+    snake = Snake 0 0 Up 200
   }
 
 type alias Input =
