@@ -30,7 +30,7 @@ type alias Game =
 defaultGame : Game
 defaultGame =
   {
-    snake = Snake 0 0 Up 200
+    snake = Snake 0 0 Up 150
   }
 
 type alias Input =
@@ -55,10 +55,29 @@ update {dir,delta} ({snake} as game) =
 updateSnakePosition : Time -> Snake -> Snake
 updateSnakePosition time ({x,y,d,v} as snake) =
   case d of
-    Left -> { snake | x <- x - 100 * time }
-    Up -> { snake | y <- y - 100 * time}
-    Right -> { snake | x <- x + 100 * time}
-    Down -> { snake | y <- y + 100 * time}
+    Left ->
+      if x < -(halfWidth) then
+        { snake | x <- halfWidth }
+      else
+        { snake | x <- x - v * time }
+
+    Up ->
+      if y < -(halfHeight) then
+        { snake | y <- halfHeight }
+      else
+        { snake | y <- y - v * time }
+
+    Right ->
+      if x > halfWidth then
+        { snake | x <- -(halfWidth) }
+      else
+        { snake | x <- x + v * time }
+
+    Down ->
+      if y > halfHeight then
+        { snake | y <- -(halfHeight) }
+      else
+        { snake | y <- y + v * time }
 
 updateSnakeDirection : Direction -> Snake -> Snake
 updateSnakeDirection direction ({x,y,d,v} as snake) =
