@@ -67,14 +67,17 @@ updateSnakeDirection direction ({x,y,d,v} as snake) =
       Up -> { snake | d <- direction }
       Down -> { snake | d <- direction }
       _ -> { snake | d <- d }
+
     Up -> case direction of
       Left -> { snake | d <- direction }
       Right -> { snake | d <- direction }
       _ -> { snake | d <- d }
+
     Right -> case direction of
       Up -> { snake | d <- direction }
       Down -> { snake | d <- direction }
       _ -> { snake | d <- d }
+
     Down -> case direction of
       Left -> { snake | d <- direction }
       Right -> { snake | d <- direction }
