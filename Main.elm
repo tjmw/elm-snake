@@ -45,21 +45,40 @@ update : Input -> Game -> Game
 update {dir,delta} ({snake} as game) =
   let
     newSnake =
-      updateSnake delta dir snake
+      updateSnakePosition delta <|
+      updateSnakeDirection dir snake
   in
     { game |
         snake <- newSnake
     }
 
+updateSnakePosition : Time -> Snake -> Snake
+updateSnakePosition time ({x,y,d,v} as snake) =
+  case d of
+    Left -> { snake | x <- x - 100 * time }
+    Up -> { snake | y <- y - 100 * time}
+    Right -> { snake | x <- x + 100 * time}
+    Down -> { snake | y <- y + 100 * time}
 
-updateSnake : Time -> Direction -> Snake -> Snake
-updateSnake time direction ({x,y,d,v} as snake) =
-  case direction of
-    Left -> { snake | x <- x - 10 }
-    Up -> { snake | y <- y - 10 }
-    Right -> { snake | x <- x + 10 }
-    Down -> { snake | y <- y + 10 }
-    Noop -> { snake | y <- y, x <- x }
+updateSnakeDirection : Direction -> Snake -> Snake
+updateSnakeDirection direction ({x,y,d,v} as snake) =
+  case d of
+    Left -> case direction of
+      Up -> { snake | d <- direction }
+      Down -> { snake | d <- direction }
+      _ -> { snake | d <- d }
+    Up -> case direction of
+      Left -> { snake | d <- direction }
+      Right -> { snake | d <- direction }
+      _ -> { snake | d <- d }
+    Right -> case direction of
+      Up -> { snake | d <- direction }
+      Down -> { snake | d <- direction }
+      _ -> { snake | d <- d }
+    Down -> case direction of
+      Left -> { snake | d <- direction }
+      Right -> { snake | d <- direction }
+      _ -> { snake | d <- d }
 
 -- VIEW
 
