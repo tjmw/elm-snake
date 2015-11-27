@@ -3,6 +3,7 @@ import Debug
 import Graphics.Collage exposing (..)
 import Graphics.Element exposing (..)
 import Keyboard
+import Random exposing (..)
 import Text
 import Time exposing (..)
 import Window
@@ -11,6 +12,11 @@ import Window
 
 (gameWidth,gameHeight) = (600,600)
 (halfWidth,halfHeight) = (300,300)
+
+applePositionGenerator = float -(halfWidth) halfWidth
+
+seed0 = initialSeed 31415
+((initialAppleX, initialAppleY), seed1) = generate (pair applePositionGenerator applePositionGenerator) seed0
 
 type Direction = Left | Up | Right | Down | Noop
 
@@ -22,15 +28,25 @@ type alias Snake =
     v : Float
   }
 
+type alias Apple =
+  {
+    x : Float,
+    y : Float
+  }
+
 type alias Game =
   {
-    snake : Snake
+    snake : Snake,
+    apple : Apple,
+    seed : Seed
   }
 
 defaultGame : Game
 defaultGame =
   {
-    snake = Snake 0 0 Up 150
+    snake = Snake 0 0 Up 150,
+    apple = Apple initialAppleX initialAppleY,
+    seed = seed1
   }
 
 type alias Input =
@@ -105,21 +121,21 @@ updateSnakeDirection direction ({x,y,d,v} as snake) =
 -- VIEW
 
 view : (Int,Int) -> Game -> Element
-view (w,h) {snake} =
+view (w,h) {snake, apple} =
   container w h middle <|
   collage gameWidth gameHeight
-    [ rect gameWidth gameHeight
-        |> filled backgroundColour
-    , rect 15 15
-        |> make snake
+    [
+      rect gameWidth gameHeight |> filled backgroundColour,
+      make apple (rect 15 15) red,
+      make snake (rect 15 15) black
     ]
 
 backgroundColour =
   rgb 204 255 204
 
-make obj shape =
+make obj shape color =
   shape
-    |> filled black
+    |> filled color
     |> move (obj.x,obj.y)
 
 -- SIGNALS
