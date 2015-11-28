@@ -152,7 +152,7 @@ view (w,h) {snake, apple} =
   collage gameWidth gameHeight
     [
       rect gameWidth gameHeight |> filled backgroundColour,
-      make apple (rect 15 15) red,
+      make apple (circle 8) red,
       make snake (rect 15 15) black
     ]
 
