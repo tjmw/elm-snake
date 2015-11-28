@@ -127,10 +127,10 @@ delta =
 arrowToDirection : { x : Int, y : Int } -> Snake.Direction
 arrowToDirection arrow =
   case (arrow.x, arrow.y) of
-    (1,0) -> Snake.Right
     (-1,0) -> Snake.Left
-    (0,1) -> Snake.Down
-    (0,-1) -> Snake.Up
+    (0,1) -> Snake.Up
+    (1,0) -> Snake.Right
+    (0,-1) -> Snake.Down
     _ -> Snake.Noop
 
 input : Signal Input

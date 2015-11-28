@@ -31,7 +31,7 @@ updateSnakePosition time ({x,y,d,v} as snake) =
       else
         { snake | x <- x - v * time }
 
-    Up ->
+    Down ->
       if y < -(halfHeight) then
         { snake | y <- halfHeight }
       else
@@ -43,7 +43,7 @@ updateSnakePosition time ({x,y,d,v} as snake) =
       else
         { snake | x <- x + v * time }
 
-    Down ->
+    Up ->
       if y > halfHeight then
         { snake | y <- -(halfHeight) }
       else
