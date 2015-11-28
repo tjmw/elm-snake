@@ -3,57 +3,48 @@ import Debug
 import Graphics.Collage exposing (..)
 import Graphics.Element exposing (..)
 import Keyboard
-import Random exposing (..)
 import Text
 import Time exposing (..)
 import Window
 
+import Apple exposing (
+  Apple,
+  initialApple,
+  generateNewApple)
+
+import Collision exposing (colliding)
+
+import Snake exposing (
+  Snake,
+  increaseVelocity,
+  initialSnake,
+  updateSnakePosition,
+  updateSnakeDirection)
+
+import Globals exposing(
+  gameWidth,
+  gameHeight,
+  halfWidth,
+  halfHeight)
+
 -- MODEL
-
-(gameWidth,gameHeight) = (600,600)
-(halfWidth,halfHeight) = (gameWidth/2,gameHeight/2)
-
-applePositionGenerator = float -(halfWidth) halfWidth
-
-seed0 = initialSeed 31415
-((initialAppleX, initialAppleY), seed1) = generate (pair applePositionGenerator applePositionGenerator) seed0
-
-velocityStep = 10
-
-type Direction = Left | Up | Right | Down | Noop
-
-type alias Snake =
-  {
-    x : Float,
-    y : Float,
-    d : Direction,
-    v : Float
-  }
-
-type alias Apple =
-  {
-    x : Float,
-    y : Float
-  }
 
 type alias Game =
   {
     snake : Snake,
-    apple : Apple,
-    seed : Seed
+    apple : Apple
   }
 
 defaultGame : Game
 defaultGame =
   {
-    snake = Snake 0 0 Up 150,
-    apple = Apple initialAppleX initialAppleY,
-    seed = seed1
+    snake = initialSnake,
+    apple = initialApple
   }
 
 type alias Input =
   {
-    dir : Direction,
+    dir : Snake.Direction,
     delta : Time
   }
 
@@ -62,7 +53,7 @@ type alias Input =
 update : Input -> Game -> Game
 update {dir,delta} game =
   let
-    {snake,apple,seed} = game
+    {snake,apple} = game
 
     snake1 =
       updateSnakePosition delta <|
@@ -73,87 +64,16 @@ update {dir,delta} game =
         then increaseVelocity snake1
         else snake1
 
-    (apple1, seed1) =
+    apple1 =
       if colliding snake2 apple
-        then generateNewApple seed
-        else (apple, seed)
+        then generateNewApple apple
+        else apple
 
   in
     { game |
         snake <- snake2,
-        apple <- apple1,
-        seed <- seed1
+        apple <- apple1
     }
-
-generateNewApple : Seed -> (Apple, Seed)
-generateNewApple seed =
-  let
-    ((x1, y1), seed1) = generate (pair applePositionGenerator applePositionGenerator) seed
-  in
-    (Apple x1 y1, seed1)
-
-increaseVelocity : Snake -> Snake
-increaseVelocity ({v} as snake) =
-  { snake | v <- v + velocityStep }
-
-colliding : Snake -> Apple -> Bool
-colliding snake apple =
-  if snake.x - apple.x < 15
-      && snake.x - apple.x > -15
-      && snake.y - apple.y < 15
-      && snake.y - apple.y > -15
-    then True
-    else False
-
-updateSnakePosition : Time -> Snake -> Snake
-updateSnakePosition time ({x,y,d,v} as snake) =
-  case d of
-    Left ->
-      if x < -(halfWidth) then
-        { snake | x <- halfWidth }
-      else
-        { snake | x <- x - v * time }
-
-    Up ->
-      if y < -(halfHeight) then
-        { snake | y <- halfHeight }
-      else
-        { snake | y <- y - v * time }
-
-    Right ->
-      if x > halfWidth then
-        { snake | x <- -(halfWidth) }
-      else
-        { snake | x <- x + v * time }
-
-    Down ->
-      if y > halfHeight then
-        { snake | y <- -(halfHeight) }
-      else
-        { snake | y <- y + v * time }
-
-updateSnakeDirection : Direction -> Snake -> Snake
-updateSnakeDirection direction ({x,y,d,v} as snake) =
-  case d of
-    Left -> case direction of
-      Up -> { snake | d <- direction }
-      Down -> { snake | d <- direction }
-      _ -> { snake | d <- d }
-
-    Up -> case direction of
-      Left -> { snake | d <- direction }
-      Right -> { snake | d <- direction }
-      _ -> { snake | d <- d }
-
-    Right -> case direction of
-      Up -> { snake | d <- direction }
-      Down -> { snake | d <- direction }
-      _ -> { snake | d <- d }
-
-    Down -> case direction of
-      Left -> { snake | d <- direction }
-      Right -> { snake | d <- direction }
-      _ -> { snake | d <- d }
 
 -- VIEW
 
@@ -187,14 +107,14 @@ gameState =
 delta =
   Signal.map inSeconds (fps 35)
 
-arrowToDirection : { x : Int, y : Int } -> Direction
+arrowToDirection : { x : Int, y : Int } -> Snake.Direction
 arrowToDirection arrow =
   case (arrow.x, arrow.y) of
-    (1,0) -> Right
-    (-1,0) -> Left
-    (0,1) -> Down
-    (0,-1) -> Up
-    _ -> Noop
+    (1,0) -> Snake.Right
+    (-1,0) -> Snake.Left
+    (0,1) -> Snake.Down
+    (0,-1) -> Snake.Up
+    _ -> Snake.Noop
 
 input : Signal Input
 input =
