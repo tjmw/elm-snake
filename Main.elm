@@ -3,7 +3,7 @@ import Debug
 import Graphics.Collage exposing (..)
 import Graphics.Element exposing (..)
 import Keyboard
-import Text
+import Text exposing (..)
 import Time exposing (..)
 import Window
 
@@ -32,14 +32,16 @@ import Globals exposing(
 type alias Game =
   {
     snake : Snake,
-    apple : Apple
+    apple : Apple,
+    score : Int
   }
 
 defaultGame : Game
 defaultGame =
   {
     snake = initialSnake,
-    apple = initialApple
+    apple = initialApple,
+    score = 0
   }
 
 type alias Input =
@@ -53,42 +55,56 @@ type alias Input =
 update : Input -> Game -> Game
 update {dir,delta} game =
   let
-    {snake,apple} = game
+    {snake,apple,score} = game
 
     snake1 =
       updateSnakePosition delta <|
       updateSnakeDirection dir snake
 
+    eatingAnApple = colliding snake1 apple
+
     snake2 =
-      if colliding snake1 apple
+      if eatingAnApple
         then increaseVelocity snake1
         else snake1
 
     apple1 =
-      if colliding snake2 apple
+      if eatingAnApple
         then generateNewApple apple
         else apple
+
+    score1 =
+      if eatingAnApple
+        then score + 1
+        else score
 
   in
     { game |
         snake <- snake2,
-        apple <- apple1
+        apple <- apple1,
+        score <- score1
     }
 
 -- VIEW
 
-view : (Int,Int) -> Game -> Element
-view (w,h) {snake, apple} =
-  container w h middle <|
-  collage gameWidth gameHeight
-    [
-      rect gameWidth gameHeight |> filled backgroundColour,
-      make apple (circle 8) red,
-      make snake (rect 15 15) black
-    ]
+txt f = leftAligned << f << monospace << Text.color textColour << fromString
 
-backgroundColour =
-  rgb 204 255 204
+textColour = rgb 150 150 150
+backgroundColour = rgb 204 255 204
+
+view : (Int,Int) -> Game -> Element
+view (w,h) {snake, apple, score} =
+  let scoreEl : Element
+      scoreEl = toString score |> txt (Text.height 50)
+  in
+    container w h middle <|
+    collage gameWidth gameHeight
+      [
+        rect gameWidth gameHeight |> filled backgroundColour,
+        toForm scoreEl |> move (0, gameHeight/2 - 40),
+        make apple (circle 8) red,
+        make snake (rect 15 15) black
+      ]
 
 make obj shape color =
   shape
