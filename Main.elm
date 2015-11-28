@@ -58,15 +58,41 @@ type alias Input =
 -- UPDATE
 
 update : Input -> Game -> Game
-update {dir,delta} ({snake} as game) =
+update {dir,delta} game =
   let
-    newSnake =
+    {snake,apple,seed} = game
+
+    snake1 =
       updateSnakePosition delta <|
       updateSnakeDirection dir snake
+
+    (apple1, seed1) =
+      if colliding snake1 apple
+        then generateNewApple seed
+        else (apple, seed)
+
   in
     { game |
-        snake <- newSnake
+        snake <- snake1,
+        apple <- apple1,
+        seed <- seed1
     }
+
+generateNewApple : Seed -> (Apple, Seed)
+generateNewApple seed =
+  let
+    ((x1, y1), seed1) = generate (pair applePositionGenerator applePositionGenerator) seed
+  in
+    (Apple x1 y1, seed1)
+
+colliding : Snake -> Apple -> Bool
+colliding snake apple =
+  if snake.x - apple.x < 15
+      && snake.x - apple.x > -15
+      && snake.y - apple.y < 15
+      && snake.y - apple.y > -15
+    then True
+    else False
 
 updateSnakePosition : Time -> Snake -> Snake
 updateSnakePosition time ({x,y,d,v} as snake) =
