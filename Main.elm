@@ -11,7 +11,7 @@ import Window
 -- MODEL
 
 (gameWidth,gameHeight) = (600,600)
-(halfWidth,halfHeight) = (300,300)
+(halfWidth,halfHeight) = (gameWidth/2,gameHeight/2)
 
 applePositionGenerator = float -(halfWidth) halfWidth
 
