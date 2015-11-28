@@ -93,7 +93,8 @@ textColour = rgb 150 150 150
 backgroundColour = rgb 204 255 204
 
 view : (Int,Int) -> Game -> Element
-view (w,h) {snake, apple, score} =
+view (w,h) ({snake, apple, score} as game) =
+  Debug.watchSummary "Game state" (\_ -> game) <|
   let scoreEl : Element
       scoreEl = toString score |> txt (Text.height 50)
   in
