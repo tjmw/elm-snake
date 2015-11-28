@@ -18,6 +18,8 @@ applePositionGenerator = float -(halfWidth) halfWidth
 seed0 = initialSeed 31415
 ((initialAppleX, initialAppleY), seed1) = generate (pair applePositionGenerator applePositionGenerator) seed0
 
+velocityStep = 10
+
 type Direction = Left | Up | Right | Down | Noop
 
 type alias Snake =
@@ -66,14 +68,19 @@ update {dir,delta} game =
       updateSnakePosition delta <|
       updateSnakeDirection dir snake
 
-    (apple1, seed1) =
+    snake2 =
       if colliding snake1 apple
+        then increaseVelocity snake1
+        else snake1
+
+    (apple1, seed1) =
+      if colliding snake2 apple
         then generateNewApple seed
         else (apple, seed)
 
   in
     { game |
-        snake <- snake1,
+        snake <- snake2,
         apple <- apple1,
         seed <- seed1
     }
@@ -84,6 +91,10 @@ generateNewApple seed =
     ((x1, y1), seed1) = generate (pair applePositionGenerator applePositionGenerator) seed
   in
     (Apple x1 y1, seed1)
+
+increaseVelocity : Snake -> Snake
+increaseVelocity ({v} as snake) =
+  { snake | v <- v + velocityStep }
 
 colliding : Snake -> Apple -> Bool
 colliding snake apple =
