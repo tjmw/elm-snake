@@ -80,9 +80,9 @@ update {dir,delta} game =
 
   in
     { game |
-        snake <- snake2,
-        apple <- apple1,
-        score <- score1
+        snake = snake2,
+        apple = apple1,
+        score = score1
     }
 
 -- VIEW
