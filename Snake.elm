@@ -20,54 +20,58 @@ initialSnake = Snake 0 0 Up 150
 
 increaseVelocity : Snake -> Snake
 increaseVelocity ({v} as snake) =
-  { snake | v <- v + velocityStep }
+  { snake | v = v + velocityStep }
 
 updateSnakePosition : Time -> Snake -> Snake
 updateSnakePosition time ({x,y,d,v} as snake) =
   case d of
     Left ->
       if x < -(halfWidth) then
-        { snake | x <- halfWidth }
+        { snake | x = halfWidth }
       else
-        { snake | x <- x - v * time }
+        { snake | x = x - v * time }
 
     Down ->
       if y < -(halfHeight) then
-        { snake | y <- halfHeight }
+        { snake | y = halfHeight }
       else
-        { snake | y <- y - v * time }
+        { snake | y = y - v * time }
 
     Right ->
       if x > halfWidth then
-        { snake | x <- -(halfWidth) }
+        { snake | x = -(halfWidth) }
       else
-        { snake | x <- x + v * time }
+        { snake | x = x + v * time }
 
     Up ->
       if y > halfHeight then
-        { snake | y <- -(halfHeight) }
+        { snake | y = -(halfHeight) }
       else
-        { snake | y <- y + v * time }
+        { snake | y = y + v * time }
+
+    _ -> snake
 
 updateSnakeDirection : Direction -> Snake -> Snake
 updateSnakeDirection direction ({x,y,d,v} as snake) =
   case d of
     Left -> case direction of
-      Up -> { snake | d <- direction }
-      Down -> { snake | d <- direction }
-      _ -> { snake | d <- d }
+      Up -> { snake | d = direction }
+      Down -> { snake | d = direction }
+      _ -> { snake | d = d }
 
     Up -> case direction of
-      Left -> { snake | d <- direction }
-      Right -> { snake | d <- direction }
-      _ -> { snake | d <- d }
+      Left -> { snake | d = direction }
+      Right -> { snake | d = direction }
+      _ -> { snake | d = d }
 
     Right -> case direction of
-      Up -> { snake | d <- direction }
-      Down -> { snake | d <- direction }
-      _ -> { snake | d <- d }
+      Up -> { snake | d = direction }
+      Down -> { snake | d = direction }
+      _ -> { snake | d = d }
 
     Down -> case direction of
-      Left -> { snake | d <- direction }
-      Right -> { snake | d <- direction }
-      _ -> { snake | d <- d }
+      Left -> { snake | d = direction }
+      Right -> { snake | d = direction }
+      _ -> { snake | d = d }
+
+    _ -> snake
