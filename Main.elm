@@ -94,9 +94,9 @@ backgroundColour = rgb 204 255 204
 
 view : (Int,Int) -> Game -> Element
 view (w,h) ({snake, apple, score} as game) =
-  Debug.watchSummary "Game state" (\_ -> game) <|
   let scoreEl : Element
       scoreEl = toString score |> txt (Text.height 50)
+      dbg = Debug.log "Game state" game
   in
     container w h middle <|
     collage gameWidth gameHeight
