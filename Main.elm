@@ -3,9 +3,11 @@ import Color exposing (..)
 import Debug
 import Collage exposing (..)
 import Element exposing (..)
+import Globals exposing (halfWidth, halfHeight)
 import Html exposing (..)
 import Html.App as App
 import Keyboard
+import Random
 import Task
 import Text exposing (..)
 import Time exposing (..)
@@ -44,33 +46,34 @@ defaultGame : Game
 defaultGame =
   {
     snake = initialSnake,
-    apple = Apple 100 100,
+    apple = Apple 10 10,
     score = 0,
     size = Size 0 0
   }
 
-init : ( Game, Cmd Msg )
+init : (Game, Cmd Msg)
 init = (defaultGame, Task.perform (\_ -> NoOp) Resize (Window.size))
 
 type Msg
   = Resize Size
   | ChangeDirection Snake.Direction
   | Tick Time
+  | Collide Int
   | NoOp
 
 -- UPDATE
 
-update : Msg -> Game -> Game
+update : Msg -> Game -> (Game, Cmd Msg)
 update msg game =
   case msg of
-    NoOp -> game
-    Resize size -> { game | size = size }
+    NoOp -> (game, Cmd.none)
+    Resize size -> ({ game | size = size }, Cmd.none)
     ChangeDirection direction ->
       let
         {snake} = game
         snake1 = updateSnakeDirection direction snake
       in
-        { game | snake = snake1 }
+        ({ game | snake = snake1 }, Cmd.none)
     Tick delta ->
       let
         {snake,apple,score} = game
@@ -79,27 +82,18 @@ update msg game =
 
         eatingAnApple = colliding snake1 apple
 
-        snake2 =
+        cmd =
           if eatingAnApple
-            then increaseVelocity snake1
-            else snake1
-
-        apple1 =
-          if eatingAnApple
-            then generateNewApple apple
-            else apple
-
-        score1 =
-          if eatingAnApple
-            then score + 1
-            else score
-
+             then Random.generate Collide (Random.int (round -(halfWidth)) (round halfWidth))
+             else Cmd.none
       in
-        { game |
-            snake = snake2,
-            apple = apple1,
-            score = score1
-        }
+        ({ game | snake = snake1 }, cmd)
+    Collide randomX -> 
+      ({ game |
+          apple = Apple (toFloat randomX) 100,
+          score = game.score + 1,
+          snake = increaseVelocity game.snake
+      }, Cmd.none)
 
 -- VIEW
 
@@ -154,7 +148,7 @@ main =
   App.program
     { init = init
     , view = view
-    , update = \msg m -> update msg m ! []
+    , update = update
     , subscriptions = subscriptions
     }
 

@@ -23,4 +23,4 @@ generateNewApple apple =
   --let
     --((x1, y1), seed1) = generate (pair applePositionGenerator applePositionGenerator) seed
   --in
-    Apple 100 100
+    Apple (apple.x + 50) (apple.y + 50)
