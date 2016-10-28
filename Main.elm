@@ -36,7 +36,8 @@ type alias Game =
     snake : Snake,
     apple : Apple,
     score : Int,
-    size : Size
+    size : Size,
+    paused : Bool
   }
 
 defaultGame : Game
@@ -45,7 +46,8 @@ defaultGame =
     snake = initialSnake,
     apple = Apple -50 -50,
     score = 0,
-    size = Size 0 0
+    size = Size 0 0,
+    paused = False
   }
 
 init : (Game, Cmd Msg)
@@ -56,6 +58,7 @@ type Msg
   | ChangeDirection Snake.Direction
   | Tick Time
   | Collide (Int, Int)
+  | Pause
   | NoOp
 
 collideCmdWithRandomTuple : Cmd Msg
@@ -65,38 +68,48 @@ collideCmdWithRandomTuple =
   in
     Random.generate Collide <| Random.map2 (,) randomIntGenerator randomIntGenerator
 
+togglePaused : Game -> Game
+togglePaused game =
+  { game | paused = not game.paused }
+
 -- UPDATE
 
 update : Msg -> Game -> (Game, Cmd Msg)
 update msg game =
-  case msg of
-    NoOp -> (game, Cmd.none)
-    Resize size -> ({ game | size = size }, Cmd.none)
-    ChangeDirection direction ->
-      let
-        {snake} = game
-        snake_ = updateSnakeDirection direction snake
-      in
-        ({ game | snake = snake_ }, Cmd.none)
-    Tick delta ->
-      let
-        {snake,apple,score} = game
+  if game.paused then
+    case msg of
+      Pause -> (togglePaused game, Cmd.none)
+      _ -> (game, Cmd.none)
+  else
+    case msg of
+      NoOp -> (game, Cmd.none)
+      Pause -> (togglePaused game, Cmd.none)
+      Resize size -> ({ game | size = size }, Cmd.none)
+      ChangeDirection direction ->
+        let
+          {snake} = game
+          snake_ = updateSnakeDirection direction snake
+        in
+          ({ game | snake = snake_ }, Cmd.none)
+      Tick delta ->
+        let
+          {snake,apple,score} = game
 
-        snake_ = updateSnakePosition delta snake
+          snake_ = updateSnakePosition delta snake
 
-        eatingAnApple = colliding snake_ apple
+          eatingAnApple = colliding snake_ apple
 
-        cmd =
-          if eatingAnApple then collideCmdWithRandomTuple
-          else Cmd.none
-      in
-        ({ game | snake = snake_ }, cmd)
-    Collide (x, y) ->
-      ({ game |
-          apple = Apple (toFloat <| x) (toFloat <| y),
-          score = game.score + 1,
-          snake = increaseVelocity game.snake
-      }, Cmd.none)
+          cmd =
+            if eatingAnApple then collideCmdWithRandomTuple
+            else Cmd.none
+        in
+          ({ game | snake = snake_ }, cmd)
+      Collide (x, y) ->
+        ({ game |
+            apple = Apple (toFloat <| x) (toFloat <| y),
+            score = game.score + 1,
+            snake = increaseVelocity game.snake
+        }, Cmd.none)
 
 -- VIEW
 
@@ -142,6 +155,7 @@ keyCodeToMsg keyCode =
     38 -> ChangeDirection Snake.Up
     39 -> ChangeDirection Snake.Right
     40 -> ChangeDirection Snake.Down
+    80 -> Pause
     _ -> NoOp
 
 -- MAIN
