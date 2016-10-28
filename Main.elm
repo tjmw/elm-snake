@@ -68,16 +68,16 @@ update msg game =
     ChangeDirection direction ->
       let
         {snake} = game
-        snake1 = updateSnakeDirection direction snake
+        snake_ = updateSnakeDirection direction snake
       in
-        ({ game | snake = snake1 }, Cmd.none)
+        ({ game | snake = snake_ }, Cmd.none)
     Tick delta ->
       let
         {snake,apple,score} = game
 
-        snake1 = updateSnakePosition delta snake
+        snake_ = updateSnakePosition delta snake
 
-        eatingAnApple = colliding snake1 apple
+        eatingAnApple = colliding snake_ apple
 
         cmd =
           if eatingAnApple then
@@ -88,7 +88,7 @@ update msg game =
           else
             Cmd.none
       in
-        ({ game | snake = snake1 }, cmd)
+        ({ game | snake = snake_ }, cmd)
     Collide (x, y) ->
       ({ game |
           apple = Apple (toFloat <| x) (toFloat <| y),
