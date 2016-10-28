@@ -89,9 +89,9 @@ update msg game =
             Cmd.none
       in
         ({ game | snake = snake1 }, cmd)
-    Collide coords ->
+    Collide (x, y) ->
       ({ game |
-          apple = Apple (toFloat <| fst coords) (toFloat <| snd coords),
+          apple = Apple (toFloat <| x) (toFloat <| y),
           score = game.score + 1,
           snake = increaseVelocity game.snake
       }, Cmd.none)
