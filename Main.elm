@@ -13,10 +13,7 @@ import Text exposing (..)
 import Time exposing (..)
 import Window exposing (Size)
 
-import Apple exposing (
-  Apple,
-  generateNewApple)
-
+import Apple exposing (Apple)
 import Collision exposing (colliding)
 
 import Snake exposing (
@@ -46,7 +43,7 @@ defaultGame : Game
 defaultGame =
   {
     snake = initialSnake,
-    apple = Apple 10 10,
+    apple = Apple -50 -50,
     score = 0,
     size = Size 0 0
   }
@@ -83,9 +80,13 @@ update msg game =
         eatingAnApple = colliding snake1 apple
 
         cmd =
-          if eatingAnApple
-             then Random.generate Collide (Random.map2 (,) (Random.int (round -(halfWidth)) (round halfWidth)) (Random.int (round -(halfWidth)) (round halfWidth)))
-             else Cmd.none
+          if eatingAnApple then
+            let
+              randomIntGenerator = Random.int (round -(halfWidth)) (round halfWidth)
+            in
+              Random.generate Collide <| Random.map2 (,) randomIntGenerator randomIntGenerator
+          else
+            Cmd.none
       in
         ({ game | snake = snake1 }, cmd)
     Collide coords ->
