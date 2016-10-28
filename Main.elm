@@ -58,7 +58,7 @@ type Msg
   = Resize Size
   | ChangeDirection Snake.Direction
   | Tick Time
-  | Collide Int
+  | Collide (Int, Int)
   | NoOp
 
 -- UPDATE
@@ -84,13 +84,13 @@ update msg game =
 
         cmd =
           if eatingAnApple
-             then Random.generate Collide (Random.int (round -(halfWidth)) (round halfWidth))
+             then Random.generate Collide (Random.map2 (,) (Random.int (round -(halfWidth)) (round halfWidth)) (Random.int (round -(halfWidth)) (round halfWidth)))
              else Cmd.none
       in
         ({ game | snake = snake1 }, cmd)
-    Collide randomX -> 
+    Collide coords ->
       ({ game |
-          apple = Apple (toFloat randomX) 100,
+          apple = Apple (toFloat <| fst coords) (toFloat <| snd coords),
           score = game.score + 1,
           snake = increaseVelocity game.snake
       }, Cmd.none)
@@ -151,17 +151,3 @@ main =
     , update = update
     , subscriptions = subscriptions
     }
-
---gameState : Signal Game
---gameState =
-  --Signal.foldp update defaultGame input
-
---delta =
-  --Signal.map inSeconds (fps 35)
-
---input : Signal Input
---input =
-  --Signal.sampleOn delta <|
-    --Signal.map2 Input
-      --(Signal.map arrowToDirection Keyboard.arrows)
-      --delta
