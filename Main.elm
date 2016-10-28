@@ -58,6 +58,13 @@ type Msg
   | Collide (Int, Int)
   | NoOp
 
+collideCmdWithRandomTuple : Cmd Msg
+collideCmdWithRandomTuple =
+  let
+    randomIntGenerator = Random.int (round -(halfWidth)) (round halfWidth)
+  in
+    Random.generate Collide <| Random.map2 (,) randomIntGenerator randomIntGenerator
+
 -- UPDATE
 
 update : Msg -> Game -> (Game, Cmd Msg)
@@ -80,13 +87,8 @@ update msg game =
         eatingAnApple = colliding snake_ apple
 
         cmd =
-          if eatingAnApple then
-            let
-              randomIntGenerator = Random.int (round -(halfWidth)) (round halfWidth)
-            in
-              Random.generate Collide <| Random.map2 (,) randomIntGenerator randomIntGenerator
-          else
-            Cmd.none
+          if eatingAnApple then collideCmdWithRandomTuple
+          else Cmd.none
       in
         ({ game | snake = snake_ }, cmd)
     Collide (x, y) ->
