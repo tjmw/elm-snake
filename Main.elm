@@ -61,12 +61,12 @@ type Msg
   | Pause
   | NoOp
 
+randomCoordGenerator : Random.Generator Int
+randomCoordGenerator = Random.int (round -(halfWidth)) (round halfWidth)
+
 collideCmdWithRandomTuple : Cmd Msg
 collideCmdWithRandomTuple =
-  let
-    randomIntGenerator = Random.int (round -(halfWidth)) (round halfWidth)
-  in
-    Random.generate Collide <| Random.map2 (,) randomIntGenerator randomIntGenerator
+  Random.generate Collide <| Random.map2 (,) randomCoordGenerator randomCoordGenerator
 
 togglePaused : Game -> Game
 togglePaused game =
