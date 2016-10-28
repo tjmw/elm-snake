@@ -1,17 +1,19 @@
+import AnimationFrame
 import Color exposing (..)
 import Debug
-import Graphics.Collage exposing (..)
-import Graphics.Element exposing (..)
+import Collage exposing (..)
+import Element exposing (..)
+import Globals exposing (halfWidth, halfHeight)
+import Html exposing (..)
+import Html.App as App
 import Keyboard
+import Random
+import Task
 import Text exposing (..)
 import Time exposing (..)
-import Window
+import Window exposing (Size)
 
-import Apple exposing (
-  Apple,
-  initialApple,
-  generateNewApple)
-
+import Apple exposing (Apple)
 import Collision exposing (colliding)
 
 import Snake exposing (
@@ -33,57 +35,68 @@ type alias Game =
   {
     snake : Snake,
     apple : Apple,
-    score : Int
+    score : Int,
+    size : Size
   }
 
 defaultGame : Game
 defaultGame =
   {
     snake = initialSnake,
-    apple = initialApple,
-    score = 0
+    apple = Apple -50 -50,
+    score = 0,
+    size = Size 0 0
   }
 
-type alias Input =
-  {
-    dir : Snake.Direction,
-    delta : Time
-  }
+init : (Game, Cmd Msg)
+init = (defaultGame, Task.perform (\_ -> NoOp) Resize (Window.size))
+
+type Msg
+  = Resize Size
+  | ChangeDirection Snake.Direction
+  | Tick Time
+  | Collide (Int, Int)
+  | NoOp
+
+collideCmdWithRandomTuple : Cmd Msg
+collideCmdWithRandomTuple =
+  let
+    randomIntGenerator = Random.int (round -(halfWidth)) (round halfWidth)
+  in
+    Random.generate Collide <| Random.map2 (,) randomIntGenerator randomIntGenerator
 
 -- UPDATE
 
-update : Input -> Game -> Game
-update {dir,delta} game =
-  let
-    {snake,apple,score} = game
+update : Msg -> Game -> (Game, Cmd Msg)
+update msg game =
+  case msg of
+    NoOp -> (game, Cmd.none)
+    Resize size -> ({ game | size = size }, Cmd.none)
+    ChangeDirection direction ->
+      let
+        {snake} = game
+        snake_ = updateSnakeDirection direction snake
+      in
+        ({ game | snake = snake_ }, Cmd.none)
+    Tick delta ->
+      let
+        {snake,apple,score} = game
 
-    snake1 =
-      updateSnakePosition delta <|
-      updateSnakeDirection dir snake
+        snake_ = updateSnakePosition delta snake
 
-    eatingAnApple = colliding snake1 apple
+        eatingAnApple = colliding snake_ apple
 
-    snake2 =
-      if eatingAnApple
-        then increaseVelocity snake1
-        else snake1
-
-    apple1 =
-      if eatingAnApple
-        then generateNewApple apple
-        else apple
-
-    score1 =
-      if eatingAnApple
-        then score + 1
-        else score
-
-  in
-    { game |
-        snake = snake2,
-        apple = apple1,
-        score = score1
-    }
+        cmd =
+          if eatingAnApple then collideCmdWithRandomTuple
+          else Cmd.none
+      in
+        ({ game | snake = snake_ }, cmd)
+    Collide (x, y) ->
+      ({ game |
+          apple = Apple (toFloat <| x) (toFloat <| y),
+          score = game.score + 1,
+          snake = increaseVelocity game.snake
+      }, Cmd.none)
 
 -- VIEW
 
@@ -92,13 +105,14 @@ txt f = leftAligned << f << monospace << Text.color textColour << fromString
 textColour = rgb 150 150 150
 backgroundColour = rgb 204 255 204
 
-view : (Int,Int) -> Game -> Element
-view (w,h) ({snake, apple, score} as game) =
-  Debug.watchSummary "Game state" (\_ -> game) <|
+view : Game -> Html Msg
+view ({snake, apple, score, size} as game) =
   let scoreEl : Element
       scoreEl = toString score |> txt (Text.height 50)
+      dbg = Debug.log "Game state" game
   in
-    container w h middle <|
+    toHtml <|
+    container size.width size.height middle <|
     collage gameWidth gameHeight
       [
         rect gameWidth gameHeight |> filled backgroundColour,
@@ -112,30 +126,31 @@ make obj shape color =
     |> filled color
     |> move (obj.x,obj.y)
 
--- SIGNALS
+-- SUBSCRIPTIONS
 
+subscriptions : Game -> Sub Msg
+subscriptions game =
+  Sub.batch
+    [ Window.resizes Resize
+    , Keyboard.downs keyCodeToMsg
+    , AnimationFrame.diffs (Tick<<inSeconds)
+    ]
+
+keyCodeToMsg keyCode =
+  case keyCode of
+    37 -> ChangeDirection Snake.Left
+    38 -> ChangeDirection Snake.Up
+    39 -> ChangeDirection Snake.Right
+    40 -> ChangeDirection Snake.Down
+    _ -> NoOp
+
+-- MAIN
+
+main : Program Never
 main =
-  Signal.map2 view Window.dimensions gameState
-
-gameState : Signal Game
-gameState =
-  Signal.foldp update defaultGame input
-
-delta =
-  Signal.map inSeconds (fps 35)
-
-arrowToDirection : { x : Int, y : Int } -> Snake.Direction
-arrowToDirection arrow =
-  case (arrow.x, arrow.y) of
-    (-1,0) -> Snake.Left
-    (0,1) -> Snake.Up
-    (1,0) -> Snake.Right
-    (0,-1) -> Snake.Down
-    _ -> Snake.Noop
-
-input : Signal Input
-input =
-  Signal.sampleOn delta <|
-    Signal.map2 Input
-      (Signal.map arrowToDirection Keyboard.arrows)
-      delta
+  App.program
+    { init = init
+    , view = view
+    , update = update
+    , subscriptions = subscriptions
+    }

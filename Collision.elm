@@ -1,4 +1,4 @@
-module Collision where
+module Collision exposing(..)
 
 import Apple exposing (Apple)
 import Snake exposing (Snake)

@@ -1,4 +1,4 @@
-module Snake where
+module Snake exposing(..)
 
 import Time exposing (..)
 
